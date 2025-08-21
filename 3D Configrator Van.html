@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Car Configurator</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    .canvas-area {
+      height: 100vh;
+      width: 100%;
+      background-color: #e9ecef;
+      position: relative;
+    }
+
+    #configCanvas {
+      width: 100%;
+      height: 100%;
+      background-color: #ccc;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      right: -30%;
+      width: 30%;
+      height: 100%;
+      background-color: #2c3e50;
+      box-shadow: -\2px 0 5px rgba(0, 0, 0, 0.2);
+      transition: right 0.3s ease;
+      z-index: 1000;
+      overflow-y: auto;
+      padding: 20px;
+      color: #fff;
+      padding-bottom: 130px;
+      padding-top: 50px;
+    }
+
+    .feature-card.selected {
+      border-color: #007bff;
+      background-color: #e6f0ff;
+      position: relative;
+    }
+
+    .feature-card .checkmark {
+      position: absolute;
+      right: 0px;
+      background-color: #007bff;
+      color: white;
+      border-radius: 0px 0px 0px 10px;
+      width: 30px;
+      height: 30px;
+      font-size: 20px;
+      font-weight: bold;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      top: 0px;
+    }
+
+    .feature-card.selected .checkmark {
+      display: flex;
+    }
+
+    .sidebar.open {
+      right: 0;
+    }
+
+    .toggle-btn {
+      position: fixed;
+      top: 50%;
+      right: 0;
+      transform: translateY(-50%);
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 5px 0 0 5px;
+      cursor: pointer;
+      z-index: 1001;
+      transition: right 0.3s ease;
+    }
+
+    .sidebar.open~.toggle-btn {
+      right: 30% !important;
+    }
+
+    .sidebar-buttons {
+
+      position: fixed;
+      top: 0px;
+      width: 25.6%;
+      background-color: #e1e2ea;
+    }
+
+    .sidebar-buttons .btn.active {
+      background-color: #fff;
+    }
+
+    .feature-card {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      padding: 10px;
+      background: linear-gradient(rgb(255 255 255), rgb(245 232 232 / 70%));
+      color: #000;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px #000, inset 0 0 0 1px #fff, inset 0 2px 5px #fff, inset 0 -4.5px 1px #0000002b;
+    }
+
+
+    .feature-card.selected {
+      border: 2px solid #007bff;
+      background-color: #f0f8ff;
+    }
+
+    .feature-card img {
+      width: 80px;
+      height: 80px;
+      object-fit: fill;
+    }
+
+    .feature-content {
+      padding: 10px;
+    }
+
+    .feature-content h6 {
+      margin: 0 0 5px;
+    }
+
+    .feature-content p {
+      margin: 0;
+      font-size: 0.875rem;
+    }
+
+    .pagination-buttons {
+      margin-top: 20px;
+      background: #e1e2ea;
+      border-radius: 5px;
+      height: 60px;
+    }
+
+    .pagination-buttons button {
+      width: 50%;
+    }
+
+    #sidebarContent {
+
+      display: flex;
+      flex-direction: column;
+
+    }
+
+    .pagination-buttons {
+      position: fixed;
+      width: 26%;
+      bottom: 0px;
+    }
+
+    .arrow-icon {
+      font-size: 35px;
+      color: #000;
+    }
+
+    /* Container layout */
+    .config-layout {
+      display: flex;
+      flex-direction: row;
+      height: 100%;
+      width: 100%;
+    }
+
+    /* Image section */
+    .config-image {
+      height: 100vh;
+      box-sizing: border-box;
+    }
+
+    @media(max-width:1024px) and (min-width:779px) {
+      .sidebar {
+        width: 36%;
+        right: -36%;
+      }
+
+      .sidebar.open~.toggle-btn {
+        right: 36% !important;
+      }
+
+      .pagination-buttons,
+      .sidebar-buttons {
+        width: 32%;
+      }
+    }
+
+    @media (max-width: 768px) {
+
+      .sidebar {
+        width: 90%;
+        right: -100%;
+        top: 40%;
+      }
+
+      .sidebar.open {
+        right: 0;
+      }
+
+      .sidebar.open~.toggle-btn {
+
+        right: 100%;
+
+      }
+
+      .toggle-btn {
+        right: 0;
+        border-radius: 5px 0 0 5px;
+      }
+
+      .sidebar-buttons {
+        top: 40% !important;
+        width: 90%;
+      }
+
+      .sidebar-buttons .btn {
+        font-size: 0.9rem;
+        padding: 0.5rem;
+      }
+
+      .canvas-banner-img {
+        height: 250px;
+        object-fit: cover;
+      }
+
+      .feature-card img {
+        width: 60px;
+        height: 60px;
+      }
+
+      .feature-content h6 {
+        font-size: 0.9rem;
+      }
+
+      .feature-content p {
+        font-size: 0.75rem;
+
+      }
+
+      .config-layout {
+        flex-direction: column;
+      }
+
+      .config-image,
+      .sidebar {
+        width: 100%;
+      }
+
+      .toggle-btn {
+        display: none !important;
+      }
+
+      .sidebar {
+        right: 0 !important;
+
+      }
+
+      .pagination-buttons {
+        position: relative;
+        width: 100%;
+      }
+
+    }
+  </style>
+</head>
+
+<body>
+  <div class="canvas-area">
+    <div id="configCanvas" class="canvas-container">
+      <div class="config-layout">
+        <div class="config-image w-100">
+          <img
+            src="https://bigbearvans.com/wp-content/uploads/2025/02/Greyscale-Photo-centric-Skincare-website-Banner.png"
+            alt="Config Image" class="canvas-banner-img w-100">
+        </div>
+
+        <div class="sidebar-wrapper" id="sidebarWrapper">
+          <div class="sidebar" id="sidebar">
+            <div class="sidebar-buttons  d-flex justify-content-between align-items-center">
+              <button class="btn text-dark border-0 m-2 w-100" id="interiorBtn">Interior</button>
+              <button class="btn text-dark border-0 m-2 w-100" id="exteriorBtn">Exterior</button>
+              <button class="btn text-dark border-0 m-2 w-100" id="systemBtn">System</button>
+            </div>
+            <div id="sidebarContent"></div>
+          </div>
+          <button class="toggle-btn" id="toggleBtn">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <script>
+    const sidebar = document.getElementById("sidebar");
+    const toggleBtn = document.getElementById("toggleBtn");
+    const sidebarContent = document.getElementById("sidebarContent");
+    const interiorBtn = document.getElementById("interiorBtn");
+    const exteriorBtn = document.getElementById("exteriorBtn");
+    const systemBtn = document.getElementById("systemBtn");
+    const interiorSteps = [
+      {
+        title: "Driver’s Area",
+        desc: "Enhance the driver's cabin for functionality.",
+        cards: [
+          { title: "Jump Seat", desc: "A compact seat for extra capacity.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/jump-seat.png" },
+          { title: "Lagun Table", desc: "Swiveling table with built-in cup holder.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/lagun-table.png" },
+          { title: "Overhead Shelf", desc: "Extra storage above the driver's head.", img: "https://sprinterupgrades.com/cdn/shop/products/Sprinter-swivel-seat-base-adapters.JPG?v=1484593140" },
+          { title: "Dashboard Organizer", desc: "Keep your essentials within reach.", img: "https://www.ergomobility.co.uk/wp-content/uploads/2019/01/Swivel-Seats-main.jpg" },
+          { title: "Phone Mount", desc: "Hands-free phone access while driving.", img: "https://i.ebayimg.com/images/g/E-0AAOSwEclmO4FE/s-l1600.webp" },
+          { title: "Steering Wheel Tray", desc: "Create a desk while parked.", img: "https://m.media-amazon.com/images/I/614pdOpzEAL._SX569_.jpg" },
+          { title: "Cab Curtain", desc: "Privacy divider between cab and cabin.", img: "https://m.media-amazon.com/images/I/41kv0IbDGUL._SX300_SY300_QL70_FMwebp_.jpg" }
+        ]
+      },
+      {
+        title: "Behind the Driver",
+        desc: "Optimize space behind the driver's seat.",
+        cards: [
+          { title: "Storage Cabinet", desc: "Organized vertical storage.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/swivel-seat.png" },
+          { title: "Utility Box", desc: "Lockable tool storage.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/wall-cabinet-driverside.png" }
+        ]
+      },
+      {
+        title: "Bed/Dinette",
+        desc: "Design a versatile sleeping and dining space.",
+        cards: [
+          { title: "Folding Bed", desc: "Space-saving sleeping solution.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/dinettebed.png" },
+          { title: "Convertible Table", desc: "Transforms from table to bed.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/cushion-bed.png" },
+          { title: "Cushion Set", desc: "Comfortable seating and sleeping.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/swivel-table.png" },
+          { title: "Storage Bench", desc: "Dual-purpose seating.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/elevatorbed.png" },
+          { title: "Window Shades", desc: "Privacy and temperature control.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/reading-light.png" },
+          { title: "Reading Light", desc: "LED light for nighttime use.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/shower-box-one.png" }
+        ]
+      },
+      {
+        title: "Behind the Passenger Seat",
+        desc: "Finish off your design by perfecting the overhead details.",
+        cards: [
+          { title: "Partition Wall", desc: "Dividing wall for space optimization.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/partation-wall.png" },
+          { title: "Minimalist Kitchen", desc: "Compact cooking area.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/minimalist-kitchen.jpg" },
+          { title: "Undermount Sink", desc: "Sink mounted below the countertop.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/undermount-sink.png" },
+          { title: "Black Faucet", desc: "swivel for the passenger seat", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/black-faucet.png" },
+          { title: "Stove Small", desc: "over the cab storage shelf", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/faucet-two.png" },
+          { title: "Extended Countertop", desc: "over the cab storage inclosed cabinet with a door", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/extended-countertop.png" },
+          { title: "Sink Cover", desc: "Enclosed shower box.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/sink-cover.png" },
+
+        ]
+      },
+      {
+        title: "Shower",
+        desc: "Incorporate efficient bathroom solutions.",
+        cards: [
+          { title: "Shower Small", desc: "Compact shower unit.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/small-shower.png" },
+          { title: "Shower Medium", desc: "Medium-sized shower unit.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/shower.png" },
+
+        ]
+      },
+      {
+        title: "Panel",
+        desc: "Customize interior surfaces.",
+        cards: [
+          { title: "Wall Panels", desc: "Decorative wall panels.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/wall-panel-one.png" },
+          { title: "Ceiling", desc: "Ceiling finish panels.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/ceiling.png" },
+
+        ]
+      }
+    ];
+
+
+    const exteriorSteps = [
+      {
+        title: "Rear View",
+        desc: "Add features to the rear of the van.",
+        cards: [
+          { title: "Storage Box", desc: "Extra storage capacity for your van.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/storage-box.png" },
+          { title: "Back Carrier", desc: "Carrier mounted at the back.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/bc.png" },
+        ]
+      },
+      {
+        title: "Roof",
+        desc: "Enhance the roof with functional elements.",
+        cards: [
+          { title: "AC", desc: "Air conditioner for effective cooling.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/ac.png" },
+          { title: "Maxx Air Fan", desc: "Roof-mounted fan for improved ventilation.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/max-air-fan.png" },
+          { title: "Roof Rack", desc: "Sturdy rack for roof storage.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/roofrack.png" },
+          { title: "Solar", desc: "Solar panels for renewable power.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/solar.png" },
+        ]
+      },
+
+      {
+        title: "Awning",
+        desc: "Customize the right side of the van..",
+        cards: [
+          { title: "AC", desc: "Air conditioner for effective cooling.", img: "https://bbv.d3pbrrligotzvl.amplifyapp.com/images/png/awning.png" },
+        ]
+      }
+    ];
+
+    let currentStep = 0;
+    let currentMode = "interior";
+
+    function renderStep() {
+      const steps = currentMode === "interior" ? interiorSteps : exteriorSteps;
+      const step = steps[currentStep];
+      let content = `<h3 class="mt-3">${step.title}</h3><p>${step.desc}</p>${generateCards(step.cards, step.title)}`;
+      content += `
+    <div class="pagination-buttons  p-3">
+      <div class="prev-next-btn w-100 d-flex justify-content-between">  
+      <div class="arrow  mx-2" id="prevBtn" ${currentStep === 0 ? "disabled" : ""}><i class="arrow-icon fas fa-chevron-circle-left" ></i></div>
+       <button class="btn btn-success">Save to Cloude</button>
+      <div class="arrow  mx-2" id="nextBtn" ${currentStep === steps.length - 1 ? "disabled" : ""}><i class="arrow-icon fas fa-chevron-circle-right"></i></div>
+      </div>
+      <div class="w-100 py-2 d-flex justify-content-center">
+      </div>
+    </div>`;
+
+
+      sidebarContent.innerHTML = content;
+
+      document.querySelectorAll('.feature-card').forEach(card => {
+        card.addEventListener('click', () => {
+          document.querySelectorAll('.feature-card').forEach(c => c.classList.remove('selected'));
+          card.classList.add('selected');
+        });
+      });
+
+      document.getElementById("prevBtn").addEventListener("click", () => {
+        if (currentStep > 0) {
+          currentStep--;
+          renderStep();
+        }
+      });
+
+      document.getElementById("nextBtn").addEventListener("click", () => {
+        if (currentStep < steps.length - 1) {
+          currentStep++;
+          renderStep();
+        }
+      });
+    }
+
+    function generateCards(data, label) {
+      let output = '';
+      if (Array.isArray(data)) {
+        data.forEach((card, i) => {
+          output += `
+        <div class="feature-card" onclick="selectFeatureCard(this)">
+          <div class="checkmark">&#10003;</div>
+          <img src="${card.img}" alt="${card.title}">
+          <div class="feature-content">
+            <h6>${card.title}</h6>
+            <p>${card.desc}</p>
+          </div>
+        </div>`;
+        });
+      } else {
+        for (let i = 1; i <= data; i++) {
+          output += `
+        <div class="feature-card" onclick="selectFeatureCard(this)">
+          <div class="checkmark">&#10003;</div>
+          <img src="https://via.placeholder.com/80" alt="${label} ${i}">
+          <div class="feature-content">
+            <h6>${label} ${i}</h6>
+            <p>Description of ${label.toLowerCase()} feature ${i}.</p>
+          </div>
+        </div>`;
+        }
+      }
+      return output;
+    }
+
+    toggleBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("open");
+      toggleBtn.classList.toggle("open");
+      toggleBtn.querySelector("i").classList.toggle("bi-chevron-left");
+      toggleBtn.querySelector("i").classList.toggle("bi-chevron-right");
+    });
+
+    interiorBtn.addEventListener("click", () => {
+      currentStep = 0;
+      currentMode = "interior";
+      renderStep();
+      interiorBtn.classList.add("active");
+      exteriorBtn.classList.remove("active");
+      systemBtn.classList.remove("active");
+    });
+
+    exteriorBtn.addEventListener("click", () => {
+      currentStep = 0;
+      currentMode = "exterior";
+      renderStep();
+      exteriorBtn.classList.add("active");
+      interiorBtn.classList.remove("active");
+      systemBtn.classList.remove("active");
+    });
+
+
+    systemBtn.addEventListener("click", () => {
+      currentStep = 0;
+      currentMode = "exterior";
+      renderStep();
+      systemBtn.classList.add("active");
+      exteriorBtn.classList.remove("active");
+      interiorBtn.classList.remove("active");
+    });
+
+    // Initial load
+    renderStep();
+    interiorBtn.classList.add("active");
+
+    function checkMobileView() {
+      if (window.innerWidth < 768) {
+        sidebar.classList.add("open");
+        toggleBtn.style.display = "none";
+      } else {
+        toggleBtn.style.display = "block";
+      }
+    }
+
+    checkMobileView();
+    window.addEventListener('resize', checkMobileView);
+
+
+
+
+
+
+    document.getElementById("configCanvas").innerHTML = `
+  <div class="config-layout">
+    <div class="config-image">
+      <img src="your-image.jpg" alt="Config Image">
+    </div>
+    <div class="sidebar">
+      <div class="sidebar-content">
+        ${generateSidebarContent()} <!-- Or however you populate the cards -->
+      </div>
+    </div>
+  </div>
+`;
+
+
+
+    function selectFeatureCard(card) {
+      // Single selection: remove previous selection
+      document.querySelectorAll('.feature-card').forEach(c => c.classList.remove('selected'));
+
+      // Add selected class to clicked one
+      card.classList.add('selected');
+    }
+
+  </script>
+</body>
+
+</html>
